@@ -106,8 +106,22 @@ def get_processed_tses():
     df = df.rename(columns={'Timestamp': 'Timestamp_final'})
     df = df.drop_duplicates(subset='user_id', keep='first')
 
-    # number of attended workshops
-    wk_count = pd.merge(df, workshop_participation, on='user_id', how='left').groupby('user_id')['wk_id'].count()
+    # keep only workshops participations that took place between a user's first and last tses survey
+    df_wk = pd.merge(df, workshop_participation, on='user_id', how='left')
+    df_wk_info = pd.merge(df_wk, workshop_info, on='wk_id', how='inner')
+    valid_wk = df_wk_info[(df_wk_info['Timestamp_baseline'] <= df_wk_info['workshop_date']) & (df_wk_info['workshop_date'] <= df_wk_info['Timestamp_final'])]
+    valid_wk_participation = valid_wk[workshop_participation.columns]
+
+    wk_count = pd.merge(df, valid_wk_participation, on='user_id', how='left').groupby('user_id')['wk_id'].count()
     df = pd.merge(df, wk_count, on='user_id', how='left')
     df = df.rename(columns={"wk_id": "nwks"})
+
+    # keep only users who have a gap of min_gap months between their baseline and final tses survey
+    min_gap = 3
+    df = df[(df['Timestamp_final']-df['Timestamp_baseline']) > pd.to_timedelta(min_gap*30, unit='d')]
     return df
+
+
+if __name__=='__main__':
+    df = get_processed_tses()
+

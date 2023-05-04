@@ -11,21 +11,17 @@ import seaborn as sns
 
 df = get_processed_tses()
 
-print(df.columns)
-print(len(df))
-sns.histplot(data=df, x='nwks', palette='cool', binwidth=1)
-plt.show()
 
-# Toy example : does yexp predict baseline TSE ?
+## Toy example : does yexp predict baseline TSE ?
 #y, X = dmatrices('baseline_mean ~ yexp_teach', data=df, return_type='dataframe')
 #
 #mod = sm.OLS(y, X)
 #res= mod.fit()
 
 
-# TODO: separate by community
-# TODO: separate by TSES subscales
-# TODO: separate by high/low baseline
+# TODO: separate by community - postponed
+# TODO: separate by TSES subscales - done
+# TODO: separate by high/low baseline - interaction terms
 
 models = [
     #'final_overall_tses ~ baseline_overall_tses',

@@ -457,6 +457,12 @@ def nwks_by_duration(save=False, show=False):
         y='attendance_duration',
         data=df
     )
+    plt.plot([0, 18], [0, 18*3*60], label='3h', linewidth=1)
+    plt.plot([0, 18], [0, 18*2.5*60], label='2h30', linewidth=1)
+    plt.plot([0, 18], [0, 18*2*60], label='2h', linewidth=1)
+    plt.plot([0, 18], [0, 18*1.5*60], label='1h30', linewidth=1)
+    plt.plot([0, 18], [0, 18*1*60], label='1h', linewidth=1)
+    plt.legend()
     if save: plt.savefig(save_folder + "attendance_duration_distr.png")
     if show: plt.show()
 
@@ -495,5 +501,6 @@ if __name__=="__main__":
     #tses_final_by_baseline(save, show)
     #nwks_distr_se(save, show)  # se for "sous-échantillon"
 
-    attendance_duration_distr(save, show)
-    nwks_by_duration(save, show)
+    #attendance_duration_distr(save, show)
+    #nwks_by_duration(save, show)
+
