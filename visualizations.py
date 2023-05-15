@@ -541,8 +541,19 @@ def wkshours_vs_intervention_spans(save=False, show=False):
     if show: plt.show()
 
 
+def tses_baseline_by_cov(cov, save, show):
+    df = get_processed_tses()
+    sns.stripplot(x=cov, y='baseline_overall_tses', data=df, label='baseline_TSE')
+    ax = sns.stripplot(x=cov, y='final_overall_tses', data=df, label='final_TSE')
+    plt.xticks(rotation=5, ha='right')
+    handles, labels = ax.get_legend_handles_labels()
+    plt.legend([handles[0]]+[handles[-1]], [labels[0]]+[labels[-1]])
+    if save: plt.savefig(save_folder + "tses_baseline_by_ses.png")
+    if show: plt.show()
+
+
 if __name__=="__main__":
-    save = True
+    save = False
     show = True
     ### DEMOGRAPHICS
     #gender_distribution(save, show)
@@ -578,6 +589,8 @@ if __name__=="__main__":
     #attendance_duration_distr(save, show)
     #nwks_by_duration(save, show)
     #for n in range(2, 40):
-    nb_teachers_vs_tses_spans(save, show)
-    total_wkshours_distr(save, show)
-    wkshours_vs_intervention_spans(save, show)
+    #nb_teachers_vs_tses_spans(save, show)
+    #total_wkshours_distr(save, show)
+    #wkshours_vs_intervention_spans(save, show)
+    for cov in ['Genre', 'yexp_teach', 'teaching_level', 'teaching_privpubl', 'teaching_ses', 'is_researcher', 'nwks']:
+        tses_baseline_by_cov(cov, save, show)

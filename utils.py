@@ -36,9 +36,8 @@ def get_processed_tses():
         "final_overall_tses":
             the mean of self-efficacy for each teacher, for the latest surveys that were filled
             (only teachers who filled more than one survey)
-        #TODO: add subscales (baseline_mgmt, etc.)           [medium] - done
         #TODO: add k_wkshp_tse ({0,1,2}_wkshp_tse etc..)     [hard]
-        #TODO: add n_wkshop                                  [easy] -! Only between baseline and last TSES !
+        #TODO: add n_wkshop                                  [easy] -! Only between baseline and last TSES ! - done
     """
     participants, demographics, tses, workshop_participation, workshop_info = load_data()
 
@@ -122,7 +121,11 @@ def get_processed_tses():
     # keep only users who have a gap of min_gap months between their baseline and final tses survey
     min_gap = 3
     df = df[(df['Timestamp_final']-df['Timestamp_baseline']) > pd.to_timedelta(min_gap*30, unit='d')]
-    print(tses[tses['user_id'] == 94])
+
+    # Remove extremely underrepresented demographic groups
+    df = df[df['teaching_level']!='autre']           # 1
+    df = df[df['teaching_privpubl']!='Autre']        # 1
+    df = df[df['teaching_privpubl']!='Public&Privé'] # 1
     return df
 
 
