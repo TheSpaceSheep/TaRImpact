@@ -42,6 +42,10 @@ def load_data(data_folder="../Data_2023-04-07/"):
     print(f"Dropping {len(tses[abs(tses['z_score']) > z_score_threshold])} outliers in tses data (of size {len(tses)})")
     tses.drop(tses[abs(tses['z_score']) > z_score_threshold].index, inplace=True)
 
+    # removing surveys where all answers are NaN
+    tses = tses[~tses[tses_cols].isnull().all(axis=1)]
+    data = participants, demographics, tses, workshop_participation, workshop_info
+
     return data
 
 

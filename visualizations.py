@@ -467,6 +467,80 @@ def nwks_by_duration(save=False, show=False):
     if show: plt.show()
 
 
+def nb_teachers_vs_tses_spans(save=False, show=False):
+    """
+    Displays, for each 'span' (period between baseline survey and another survey),
+    the number of teachers for whom we have data over that span
+    note : the total number is greater than the number of teachers, because we may
+    have data fitting several spans for one teacher
+    """
+    teachers = get_teachers().drop_duplicates(subset='user_id', keep='first')
+    df = pd.merge(teachers[[c for c in teachers.columns if c != 'Timestamp']], tses, on='user_id', how='inner')
+    df['Timestamp_baseline'] = pd.merge(df, df.groupby('user_id')['Timestamp'].min(), on='user_id')['Timestamp_y']
+    df['span'] = (df['Timestamp'] - df['Timestamp_baseline']).dt.days
+    df = df[df['span'] > 0]  # only keep teachers who filled >=2 surveys
+    avg_days_by_month = 30.4167
+    df['span_in_months'] = df['span'] / avg_days_by_month
+    sns.histplot(x='span_in_months', data=df, binwidth=1)
+    plt.legend(title=f"number of points={len(df)}\nnumber of individual teachers = {len(df.drop_duplicates(subset='user_id', keep='first'))}\n span : time between baseline \nsurvey and some later survey")
+    plt.ylabel('Number of teachers')
+    plt.xlabel('Span (time between baseline survey and some later survey, in months)')
+    if save: plt.savefig(save_folder + "nb_teachers_vs_tses_spans.png")
+    if show: plt.show()
+
+
+def total_wkshours_distr(save=False, show=False):
+    teachers = get_teachers().drop_duplicates(subset='user_id', keep='first')
+    df = pd.merge(teachers, workshop_participation, on='user_id', how='left')
+    df = pd.merge(df, workshop_info, on='wk_id', how='left')
+    df['total_wkshours'] = pd.merge(df, df.groupby('user_id')['workshop_length'].sum(), on='user_id', how='right')['workshop_length_y']
+    df['total_wkshours'] = df['total_wkshours'] / 60
+    df = df.drop_duplicates(subset='user_id', keep='first')
+
+    sns.histplot(x='total_wkshours', data=df, binwidth=1)
+    plt.legend(title=f"n={len(df)}")
+    plt.ylabel('Number of teachers')
+    plt.xlabel('Total time spent in workshops (in hours)')
+    if save: plt.savefig(save_folder + "total_wkshours_distr.png")
+    if show: plt.show()
+
+
+def wkshours_vs_intervention_spans(save=False, show=False):
+    """
+    Displays, for each 'span' (period between a teacher's first and last workshop),
+    the number of hours spent in workshop for that teacher
+    """
+    teachers = get_teachers().drop_duplicates(subset='user_id', keep='first')
+    df = pd.merge(teachers, workshop_participation, on='user_id', how='left')
+    df = pd.merge(df, workshop_info, on='wk_id', how='left')
+
+    # compute span
+    df['first_wk_date'] = pd.merge(df, df.groupby('user_id')['workshop_date'].min(), on='user_id', how='inner')['workshop_date_y']
+    df['last_wk_date'] = pd.merge(df, df.groupby('user_id')['workshop_date'].max(), on='user_id', how='inner')['workshop_date_y']
+    df['span'] = (df['last_wk_date'] - df['first_wk_date']).dt.days
+    avg_days_by_month = 30.4167
+    df['span_in_months'] = (df['span'] / avg_days_by_month).replace(np.nan, 0.)
+
+    # compute total workshop hours
+    # merge 'right', to discard users who attended less than 2 workshops
+    df['total_wkshours'] = pd.merge(df, df.groupby('user_id')['workshop_length'].sum(), on='user_id', how='left')['workshop_length_y']
+    df['total_wkshours'] = df['total_wkshours'] / 60
+
+    # compute number of workshops
+    df['nwks'] = pd.merge(df, df.groupby('user_id')['wk_id'].count(), on='user_id', how='left')['wk_id_y']
+
+    df = df[df['span'] > 0]  # removes teachers who attended 0 or 1 workshops
+    df = df.drop_duplicates(subset='user_id', keep='first')
+
+    #sns.stripplot(x='span_in_months', y='total_wkshours', jitter=0.2, data=df)
+    sns.scatterplot(x=jitter(df['span_in_months'], 0.3), y=jitter(df['total_wkshours'], 0.3), alpha=0.9, hue=df['nwks'])
+    plt.legend(title=f"n={len(df)}\nColor for number\nof workshops :")
+    plt.ylabel('Total time spent in workshops (hours)')
+    plt.xlabel('Span (time between first and last workshop, in months)')
+    if save: plt.savefig(save_folder + "wkshours_vs_intervention_spans.png")
+    if show: plt.show()
+
+
 if __name__=="__main__":
     save = True
     show = True
@@ -503,4 +577,7 @@ if __name__=="__main__":
 
     #attendance_duration_distr(save, show)
     #nwks_by_duration(save, show)
-
+    #for n in range(2, 40):
+    nb_teachers_vs_tses_spans(save, show)
+    total_wkshours_distr(save, show)
+    wkshours_vs_intervention_spans(save, show)

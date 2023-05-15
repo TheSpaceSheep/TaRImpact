@@ -1,5 +1,8 @@
 from data_loading import load_data
+import numpy as np
 import pandas as pd
+
+#TODO: group yexp into bins
 
 
 def get_teachers():
@@ -119,7 +122,12 @@ def get_processed_tses():
     # keep only users who have a gap of min_gap months between their baseline and final tses survey
     min_gap = 3
     df = df[(df['Timestamp_final']-df['Timestamp_baseline']) > pd.to_timedelta(min_gap*30, unit='d')]
+    print(tses[tses['user_id'] == 94])
     return df
+
+
+def jitter(values,j):
+    return values + np.random.normal(j, 0.1, values.shape)
 
 
 if __name__=='__main__':
