@@ -26,6 +26,22 @@ def fix_teaching_ses(teachers):
     )
     return teachers
 
+def get_teaching_ses_values_short_names():
+    values = [
+        'Avec une grande hétérogénéité du public (de très favorisé à très défavorisé)',
+        'Particulièrement défavorisé (pour les établissements publics, catégorisés REP / REP+)',
+        'Particulièrement favorisé',
+        'Public homogène, ni particulièrement favorisé ou défavorisé'
+    ]
+
+    short_names = [
+        'Particulièrement défavorisé',
+        'Particulièrement favorisé',
+        'Public Homogène',
+        'Public Hétérogène',
+    ]
+    return values, short_names
+
 
 def get_processed_tses():
     """
@@ -42,6 +58,14 @@ def get_processed_tses():
     participants, demographics, tses, workshop_participation, workshop_info = load_data()
 
     teachers = get_teachers()
+
+    #TODO:
+    # group yexp into bins
+    #bins = [0., 1, 3, 7, 12, 17, 22, 27, 32, 37, 42, 47]
+    #labels = ['<'+str(x) for x in bins[1:]]
+    #print(teachers.columns)
+    #teachers['yexp_binned'] = pd.cut(teachers['yexp_teach'], bins=bins, labels=labels)
+    #print(teachers[['user_id', 'yexp_binned']])
 
     # baseline_tse
     baseline_tse = pd.merge(
@@ -123,13 +147,13 @@ def get_processed_tses():
     df = df[(df['Timestamp_final']-df['Timestamp_baseline']) > pd.to_timedelta(min_gap*30, unit='d')]
 
     # Remove extremely underrepresented demographic groups
-    df = df[df['teaching_level']!='autre']           # 1
-    df = df[df['teaching_privpubl']!='Autre']        # 1
-    df = df[df['teaching_privpubl']!='Public&Privé'] # 1
+    df = df[df['teaching_level']!='autre']            # 1
+    df = df[df['teaching_privpubl']!='Autre']         # 1
+    df = df[df['teaching_privpubl']!='Public&Privé']  # 1
     return df
 
 
-def jitter(values,j):
+def jitter(values, j):
     return values + np.random.normal(j, 0.1, values.shape)
 
 

@@ -169,7 +169,7 @@ for model in models:
     print(res.summary())
 
     # Résultats
-    # Modèle : final_overall_tses ~ baseline_overall_tses + yexp_teach + Genre + nwks + nwks:Genre                                                                                                                                                                
+    # Modèle : final_overall_tses ~ baseline_overall_tses + yexp_teach + Genre + nwks + nwks:Genre
     #                       Coef.  Std.Err.   z    P>|z| [0.025 0.975]
     # Intercept              0.387    0.064  6.089 0.000  0.263  0.512
     # Genre[T.M]            -0.014    0.025 -0.557 0.577 -0.064  0.036
@@ -226,8 +226,11 @@ for model in models:
 
 models = [
     'final_overall_tses ~ baseline_overall_tses + yexp_teach + Genre',
-    'final_overall_tses ~ baseline_overall_tses + yexp_teach + Genre + teaching_ses + is_researcher + teaching_privpubl',
+    'baseline_overall_tses ~ yexp_teach + Genre + teaching_ses + is_researcher + teaching_privpubl + is_trainer_support',
 ]
+
+# is_trainer_support explique bien la baseline TSE
+# mais n'a pas d'effet sur final_tse quand on contrôle par baseline_TSE
 
 results = {}
 for model in models:
@@ -252,11 +255,22 @@ for model in models:
     # baseline_overall_tses                  0.5087      0.085      5.993      0.000       0.340       0.677
     # yexp_teach                             0.0003      0.001      0.264      0.792      -0.002       0.002
 
+    # Avec is_trainer_support
+    # Intercept                              0.2291      0.078      2.934      0.004       0.074       0.384
+    # Genre[T.M]                             0.0121      0.019      0.633      0.528      -0.026       0.050
+    # teaching_ses[T.Particulièrement       -0.0131      0.026     -0.502      0.617      -0.065       0.039
+    # teaching_ses[T.Particulièrement        0.0119      0.035      0.342      0.733      -0.057       0.081
+    # teaching_ses[T.Public homogène,        0.0170      0.024      0.695      0.489      -0.032       0.066
+    # is_researcher[T.Oui]                   0.0855      0.030      2.861      0.005       0.026       0.145
+    # teaching_privpubl[T.Public]            0.1099      0.040      2.719      0.008       0.030       0.190
+    # is_trainer_support[T.Oui]             -0.0074      0.022     -0.332      0.740      -0.052       0.037
+    # baseline_overall_tses                  0.5184      0.092      5.642      0.000       0.336       0.701
+    # yexp_teach                             0.0004      0.001      0.360      0.719      -0.002       0.002
+
     # Note : whether the teacher is a researcher has a significant effect on increase in self-efficacy
     # This should be interpreted with caution, as there are not many teachers who are also researchers
     #  82 are NOT researchers
     #  13 are researchers
-
 
 # model comparison : higher lr_stat means that adding new variables yields an improvement
 # compared to M1
@@ -269,7 +283,7 @@ for model in models[1:]:
 
 
 # Repeating previous analysis with all covariables
-covariables = 'baseline_overall_tses + yexp_teach + Genre + teaching_ses + is_researcher + teaching_privpubl'
+covariables = 'baseline_overall_tses + yexp_teach + Genre + teaching_ses + is_researcher + teaching_privpubl + is_trainer_support'
 models = [
     f'final_overall_tses ~ {covariables}',                                     # M1
     f'final_overall_tses ~ {covariables} + nwks',                              # M2
@@ -492,4 +506,22 @@ for model in models:
     # and an interaction for student engagement (nwks has an effect on male participants)
 
 
+# Investigating a potential interaction between nwks and is_researcher
+covariables = 'baseline_overall_tses + yexp_teach + Genre + teaching_ses + is_researcher + teaching_privpubl'
+models = [
+    f'final_overall_tses ~ {covariables} + nwks + nwks:is_researcher',
+    f'final_mgmt ~ {covariables} + nwks + nwks:is_researcher',
+    f'final_engage ~ {covariables} + nwks + nwks:is_researcher',
+    f'final_strat ~ {covariables} + nwks + nwks:is_researcher',
+]
+
+for model in models:
+    mod = smf.mixedlm(model, df, groups=df["user_id"], re_formula="~nwks")
+    res = mod.fit(method=['lbfgs'])
+    print(f"\nModèle : {model}")
+    c_int = list((res.conf_int().loc['nwks']))
+    pval = res.pvalues.loc['nwks']
+    #print(f"nwks : {round(res.params.loc['nwks'], 4)} [{round(c_int[0], 4)}, {round(c_int[1], 4)}], pval: {round(pval, 3)}\n")
+    print(res.summary())
+    # Résultat : pas d'effet d'interaction entre nwks et is_researcher
 

@@ -1,3 +1,20 @@
+# ---
+# jupyter:
+#   jupytext:
+#     formats: ipynb,py:light
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.14.5
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+# ---
+
+# # Imports
+
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -6,10 +23,14 @@ from data_loading import load_data
 from  matplotlib.ticker import FuncFormatter
 from utils import *
 
-save_folder = "/home/noe/Documents/StageLPI/data_processing/plots/"
 
+# # Data Loading
+
+save_folder = "/home/noe/Documents/StageLPI/data_processing/plots/"
 participants, demographics, tses, workshop_participation, workshop_info = load_data()
 
+
+# # Plotting functions definitions
 
 def gender_distribution(save=False, show=False):
     teachers = get_teachers()
@@ -80,14 +101,8 @@ def privpubl_distribution(save=False, show=False):
 
 
 def ses_distribution(save=False, show=False):
-    values, short_names = get_teaching_ses_values_short_names()
-    short_names = [  # the order should be the same as in "values"
-        'Particulièrement défavorisé',
-        'Particulièrement favorisé',
-        'Public Homogène',
-        'Public Hétérogène',
-    ]
     teachers = get_teachers()
+    values, short_names = get_teaching_ses_values_short_names()
     # todo : difference between Ni particulièrement fav/defav et homogene ni fav/defav ? - done
     df = teachers[['user_id', 'teaching_ses']].drop_duplicates(subset='user_id', keep='first')
     ax = sns.countplot(x="teaching_ses",
@@ -233,30 +248,10 @@ def gender_by_level(save, show):
 
 
 def tses_baseline(save=False, show=False):
-    #TODO: Remove participants who filled TSES form after participating in a workshop ! - done
-    #TODO: same in the other tses functions
-    #TODO: remove outlier(s)
-    teachers = get_teachers()
-    df = pd.merge(teachers['user_id'],
-                  tses.sort_values("Timestamp").drop_duplicates(subset='user_id', keep='first'),
-                  how='inner',
-                  on='user_id',
-                 ).drop_duplicates(subset='user_id', keep='first').copy()
-
-    # remove users who filled their first TSES survey after participating in a workshop
-    not_baseline = pd.merge(
-        pd.merge(df, workshop_participation, on='user_id'),
-        workshop_info,
-        on='wk_id'
-    ).sort_values("workshop_date").drop_duplicates(subset='user_id', keep='first')
-    not_baseline = not_baseline[not_baseline['Timestamp'].dt.date > not_baseline['workshop_date']]
-
-    df = df[~df['user_id'].isin(not_baseline['user_id'])]
-
-    df["mean"] = df[tses_cols].mean(axis=1)
+    df = get_processed_tses()
 
     sns.histplot(
-        x="mean",
+        x="baseline_overall_tses",
         data=df,
         binwidth=0.02
     )
@@ -277,6 +272,7 @@ def tses_baseline_subscales(save=False, show=False):
                   on='user_id',
                  ).drop_duplicates(subset='user_id', keep='first').copy()
 
+    tses_cols = [col for col in df.columns if 'tses' in col]
     df["mean"] = df[tses_cols].mean(axis=1)
 
     student_engagement = [col for col in df.columns if "engage" in col]
@@ -320,6 +316,7 @@ def tses_baseline_by(subpop, save=False, show=False):
                   on='user_id',
                  ).drop_duplicates(subset='user_id', keep='first').copy()
 
+    tses_cols = [col for col in df.columns if 'tses' in col]
     df["mean"] = df[tses_cols].mean(axis=1)
 
     sns.set_style("whitegrid")
@@ -393,8 +390,8 @@ def tses_final_by_baseline(save=False, show=False):
     df = get_processed_tses()
 
     sns.scatterplot(
-        x='Timestamp_baseline',
-        y='baseline_mean',
+        x='baseline_overall_tses',
+        y='final_overall_tses',
         data=df
     )
 
@@ -552,45 +549,58 @@ def tses_baseline_by_cov(cov, save, show):
     if show: plt.show()
 
 
+# # Plots
+
+# ## Save Options
+
+save = False
+show = True
+
+# ## Demographics
+
 if __name__=="__main__":
-    save = False
-    show = True
-    ### DEMOGRAPHICS
-    #gender_distribution(save, show)
-    #yexp_teach_distribution(save, show)
-    #subscribed_distribution(save, show)
-    #level_distribution(save, show)
-    #privpubl_distribution(save, show)
-    #ses_distribution(save, show)
-    #other_role(save, show)
-    #workshop_types(save, show)
-    #workshop_dates(save, show)
-    #workshop_durations(save, show)
-    #workshops_with_k_participants(save, show)
-    #participants_with_k_workshops(save, show)
+    gender_distribution(save, show)
+    yexp_teach_distribution(save, show)
+    subscribed_distribution(save, show)
+    level_distribution(save, show)
+    privpubl_distribution(save, show)
+    ses_distribution(save, show)
+    other_role(save, show)
+    workshop_types(save, show)
+    workshop_dates(save, show)
+    workshop_durations(save, show)
+    workshops_with_k_participants(save, show)
+    participants_with_k_workshops(save, show)
 
-    ### CROSSED DEMOGRAPHICS
-    #gender_by_ses(save, show)
-    #gender_by_level(save, show)
+# ## Crossed Demographics
 
-    ### TSES
-    #tses_baseline(save, show)
-    #tses_baseline_subscales(save, show)
-    #tses_baseline_by("teaching_ses", save, show)
-    #tses_baseline_by("teaching_level", save, show)
-    #tses_baseline_by("Genre", save, show)
-    #tses_baseline_by("yexp_teach", save, show)
-    #tses_baseline_by("is_trainer_support", save, show)
-    #tses_baseline_by("is_researcher", save, show)
-    #tses_by_date(save, show)
-    #tses_final_by_baseline(save, show)
-    #nwks_distr_se(save, show)  # se for "sous-échantillon"
+if __name__=="__main__":
+    gender_by_ses(save, show)
+    gender_by_level(save, show)
 
-    #attendance_duration_distr(save, show)
-    #nwks_by_duration(save, show)
-    #for n in range(2, 40):
-    #nb_teachers_vs_tses_spans(save, show)
-    #total_wkshours_distr(save, show)
-    #wkshours_vs_intervention_spans(save, show)
+# ## TSES
+
+if __name__=="__main__":
+    tses_baseline(save, show)
+    tses_baseline_subscales(save, show)
+    tses_baseline_by("teaching_ses", save, show)
+    tses_baseline_by("teaching_level", save, show)
+    tses_baseline_by("Genre", save, show)
+    tses_baseline_by("yexp_teach", save, show)
+    tses_baseline_by("is_trainer_support", save, show)
+    tses_baseline_by("is_researcher", save, show)
+    tses_by_date(save, show)
+    tses_final_by_baseline(save, show)
     for cov in ['Genre', 'yexp_teach', 'teaching_level', 'teaching_privpubl', 'teaching_ses', 'is_researcher', 'nwks']:
         tses_baseline_by_cov(cov, save, show)
+
+# ## Participation
+
+if __name__=="__main__":
+    nwks_distr_se(save, show)  # se for "sous-échantillon"
+    attendance_duration_distr(save, show)
+    nwks_by_duration(save, show)
+    nb_teachers_vs_tses_spans(save, show)
+    total_wkshours_distr(save, show)
+    wkshours_vs_intervention_spans(save, show)
+
