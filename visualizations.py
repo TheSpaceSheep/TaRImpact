@@ -30,8 +30,10 @@ save_folder = "/home/noe/Documents/StageLPI/data_processing/plots/"
 participants, demographics, tses, workshop_participation, workshop_info = load_data()
 
 
+# + [markdown] heading_collapsed=true
 # # Plotting functions definitions
 
+# + hidden=true
 def gender_distribution(save=False, show=False):
     teachers = get_teachers()
     gender_df = teachers[["user_id", "Genre"]].drop_duplicates(subset='user_id', keep='first')
@@ -44,18 +46,20 @@ def gender_distribution(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def yexp_teach_distribution(save=False, show=False):
     teachers = get_teachers()
     df = teachers[['user_id', 'yexp_teach']].drop_duplicates(subset='user_id', keep='first')
-    ax = sns.histplot(x="yexp_teach", data=df,
-                      color="#5c82e0", binwidth=1)
-    ax.bar_label(ax.containers[0])
-    ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: int(x)))
+    ax = sns.countplot(x="yexp_teach", data=df,
+                      color="#5c82e0")#, binwidth=2)
+    #ax.bar_label(ax.containers[0])
+    #ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: int(x)))
     plt.legend(title=f'n = {len(df)}')
     if save: plt.savefig(save_folder + "yexp_teach_distr.png")
     if show: plt.show()
 
 
+# + hidden=true
 def subscribed_distribution(save=False, show=False):
     teachers = get_teachers()
     teachers["subscribed"] = pd.to_datetime(teachers["subscribed"])
@@ -72,6 +76,7 @@ def subscribed_distribution(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def level_distribution(save=False, show=False):
     teachers = get_teachers()
     df = teachers[['user_id', 'teaching_level']].drop_duplicates(subset='user_id', keep='first')
@@ -84,6 +89,7 @@ def level_distribution(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def privpubl_distribution(save=False, show=False):
     teachers = get_teachers()
     teachers['teaching_privpubl'] = teachers['teaching_privpubl'].map(
@@ -100,6 +106,7 @@ def privpubl_distribution(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def ses_distribution(save=False, show=False):
     teachers = get_teachers()
     values, short_names = get_teaching_ses_values_short_names()
@@ -118,6 +125,7 @@ def ses_distribution(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def other_role(save=False, show=False):
     teachers = get_teachers()
     df = teachers[['user_id', 'is_trainer_support', 'is_researcher']].drop_duplicates(subset='user_id', keep='first')
@@ -130,6 +138,7 @@ def other_role(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def workshop_types(save=False, show=False):
     df = workshop_info
     ax = sns.countplot(x="workshop_mode", data=df)
@@ -140,6 +149,7 @@ def workshop_types(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def workshop_dates(save=False, show=False):
     df = workshop_info
     df = df[['wk_id', 'workshop_date']]
@@ -156,6 +166,7 @@ def workshop_dates(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def workshop_durations(save=False, show=False):
     df = workshop_info
     df = df[['wk_id', 'workshop_length']]
@@ -172,6 +183,7 @@ def workshop_durations(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def workshops_with_k_participants(save=False, show=False):
     df = pd.merge(workshop_info["wk_id"],
                   workshop_participation[["wk_id", "user_id"]],
@@ -187,6 +199,7 @@ def workshops_with_k_participants(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def participants_with_k_workshops(save=False, show=False):
     df = pd.merge(participants["user_id"],
                   workshop_participation[["wk_id", "user_id"]],
@@ -202,6 +215,7 @@ def participants_with_k_workshops(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def gender_by_ses(save, show):
     values, short_names = get_teaching_ses_values_short_names()
     teachers = get_teachers()
@@ -226,6 +240,7 @@ def gender_by_ses(save, show):
     if show: plt.show()
 
 
+# + hidden=true
 def gender_by_level(save, show):
     teachers = get_teachers()
     df = teachers[['user_id', 'teaching_level', 'Genre']].drop_duplicates(subset='user_id', keep='first')
@@ -247,6 +262,7 @@ def gender_by_level(save, show):
     if show: plt.show()
 
 
+# + hidden=true
 def tses_baseline(save=False, show=False):
     df = get_processed_tses()
 
@@ -264,6 +280,7 @@ def tses_baseline(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def tses_baseline_subscales(save=False, show=False):
     teachers = get_teachers()
     df = pd.merge(teachers['user_id'],
@@ -307,6 +324,7 @@ def tses_baseline_subscales(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def tses_baseline_by(subpop, save=False, show=False):
     values, short_names = get_teaching_ses_values_short_names()
     teachers = get_teachers()
@@ -342,6 +360,7 @@ def tses_baseline_by(subpop, save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def tses_by_date(save=False, show=False):
     df = tses
 
@@ -360,6 +379,7 @@ def tses_by_date(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def tses_by_date_baseline_final(save=False, show=False):
     df = get_processed_tses()
 
@@ -386,12 +406,14 @@ def tses_by_date_baseline_final(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def tses_final_by_baseline(save=False, show=False):
     df = get_processed_tses()
 
     sns.scatterplot(
         x='baseline_overall_tses',
         y='final_overall_tses',
+        hue='Genre',
         data=df
     )
 
@@ -399,6 +421,7 @@ def tses_final_by_baseline(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def nwks_distr_se(save=False, show=False):
     df = get_processed_tses()
     sns.histplot(data=df, x='nwks', binwidth=1)
@@ -411,6 +434,7 @@ def nwks_distr_se(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def attendance_duration_distr(save=False, show=False):
     participation = pd.merge(participants,
                              workshop_participation,
@@ -435,6 +459,7 @@ def attendance_duration_distr(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def nwks_by_duration(save=False, show=False):
     participation = pd.merge(participants,
                              workshop_participation,
@@ -464,6 +489,7 @@ def nwks_by_duration(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def nb_teachers_vs_tses_spans(save=False, show=False):
     """
     Displays, for each 'span' (period between baseline survey and another survey),
@@ -486,6 +512,7 @@ def nb_teachers_vs_tses_spans(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def total_wkshours_distr(save=False, show=False):
     teachers = get_teachers().drop_duplicates(subset='user_id', keep='first')
     df = pd.merge(teachers, workshop_participation, on='user_id', how='left')
@@ -502,6 +529,7 @@ def total_wkshours_distr(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def wkshours_vs_intervention_spans(save=False, show=False):
     """
     Displays, for each 'span' (period between a teacher's first and last workshop),
@@ -538,6 +566,7 @@ def wkshours_vs_intervention_spans(save=False, show=False):
     if show: plt.show()
 
 
+# + hidden=true
 def tses_baseline_by_cov(cov, save, show):
     df = get_processed_tses()
     sns.stripplot(x=cov, y='baseline_overall_tses', data=df, label='baseline_TSE')
@@ -548,6 +577,31 @@ def tses_baseline_by_cov(cov, save, show):
     if save: plt.savefig(save_folder + "tses_baseline_by_ses.png")
     if show: plt.show()
 
+
+# + hidden=true
+def is_researcher_by_nwks(save=False, show=False):
+    # problème : pas assez de profs chercheurs pour que la proportion soit fiable.
+    # regarder plutôt la proportion d'individus ayant changé is_researcher
+    df = get_processed_is_researcher()
+    grouped_df = df.groupby('nwks')['is_researcher'].value_counts(normalize=True).unstack()['Oui']
+    grouped_df.plot(kind='bar')
+    if save: plt.savefig(save_folder + "is_researcher_by_nwks.png")
+    if show: plt.show()
+
+
+# + hidden=true
+def changing_researchers(save=False, show=False):
+    teachers = get_teachers()
+    teachers_teachers = pd.merge(teachers.copy(), teachers.copy(), how='inner', on='user_id')
+    teachers_teachers = teachers_teachers[teachers_teachers['Timestamp_x'] < teachers_teachers['Timestamp_y']]
+    changing = teachers_teachers[teachers_teachers['is_researcher_x'] != teachers_teachers['is_researcher_y']]
+    became_researchers = changing[changing['is_researcher_x'] == 'Non']
+    print(became_researchers['user_id'])
+    df = pd.merge(became_researchers, get_processed_is_researcher(), on='user_id', how='left').drop_duplicates(subset='user_id', keep='last')
+    print(df[['user_id', 'nwks']])
+
+
+# -
 
 # # Plots
 
@@ -572,14 +626,18 @@ if __name__=="__main__":
     workshops_with_k_participants(save, show)
     participants_with_k_workshops(save, show)
 
+# + [markdown] heading_collapsed=true
 # ## Crossed Demographics
 
+# + hidden=true
 if __name__=="__main__":
     gender_by_ses(save, show)
     gender_by_level(save, show)
 
+# + [markdown] heading_collapsed=true
 # ## TSES
 
+# + hidden=true
 if __name__=="__main__":
     tses_baseline(save, show)
     tses_baseline_subscales(save, show)
@@ -593,6 +651,7 @@ if __name__=="__main__":
     tses_final_by_baseline(save, show)
     for cov in ['Genre', 'yexp_teach', 'teaching_level', 'teaching_privpubl', 'teaching_ses', 'is_researcher', 'nwks']:
         tses_baseline_by_cov(cov, save, show)
+# -
 
 # ## Participation
 
@@ -604,3 +663,8 @@ if __name__=="__main__":
     total_wkshours_distr(save, show)
     wkshours_vs_intervention_spans(save, show)
 
+if __name__=="__main__":
+    is_researcher_by_nwks(save, show)
+
+if __name__=="__main__":
+    changing_researchers(save, show)

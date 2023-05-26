@@ -53,19 +53,10 @@ def get_processed_tses():
             the mean of self-efficacy for each teacher, for the latest surveys that were filled
             (only teachers who filled more than one survey)
         #TODO: add k_wkshp_tse ({0,1,2}_wkshp_tse etc..)     [hard]
-        #TODO: add n_wkshop                                  [easy] -! Only between baseline and last TSES ! - done
     """
     participants, demographics, tses, workshop_participation, workshop_info = load_data()
 
     teachers = get_teachers()
-
-    #TODO:
-    # group yexp into bins
-    #bins = [0., 1, 3, 7, 12, 17, 22, 27, 32, 37, 42, 47]
-    #labels = ['<'+str(x) for x in bins[1:]]
-    #print(teachers.columns)
-    #teachers['yexp_binned'] = pd.cut(teachers['yexp_teach'], bins=bins, labels=labels)
-    #print(teachers[['user_id', 'yexp_binned']])
 
     # baseline_tse
     baseline_tse = pd.merge(
@@ -147,14 +138,42 @@ def get_processed_tses():
     df = df[(df['Timestamp_final']-df['Timestamp_baseline']) > pd.to_timedelta(min_gap*30, unit='d')]
 
     # Remove extremely underrepresented demographic groups
-    df = df[df['teaching_level']!='autre']            # 1
-    df = df[df['teaching_privpubl']!='Autre']         # 1
-    df = df[df['teaching_privpubl']!='Public&Privé']  # 1
+    df = df[df['teaching_level']!='autre']            # n=1
+    df = df[df['teaching_privpubl']!='Autre']         # n=1
+    df = df[df['teaching_privpubl']!='Public&Privé']  # n=1
     return df
 
 
 def jitter(values, j):
     return values + np.random.normal(j, 0.1, values.shape)
+
+
+def get_processed_is_researcher():
+    """
+    Returns a dataframe of teachers demographics, with the following added columns:
+        "nwks": the number of attended workshops at the date answering the survey
+    """
+    participants, demographics, tses, workshop_participation, workshop_info = load_data()
+
+    teachers = get_teachers()
+
+    df_wk = pd.merge(
+        teachers.copy(),
+        workshop_participation,
+        how='left',
+        on='user_id',
+    )
+    df_wk = pd.merge(
+        df_wk,
+        workshop_info,
+        how='left',
+        on='wk_id'
+    )
+    teachers = teachers.set_index(['user_id', 'Timestamp'])
+    teachers['nwks'] = df_wk[(df_wk['workshop_date'] <= df_wk['Timestamp']) | pd.isnull(df_wk['workshop_date'])].groupby(['user_id', 'Timestamp'])['wk_id'].count()
+    teachers['nwks'] = teachers['nwks'].fillna(0).astype('Int64')
+
+    return teachers
 
 
 if __name__=='__main__':

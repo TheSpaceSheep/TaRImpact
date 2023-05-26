@@ -46,6 +46,16 @@ def load_data(data_folder="../Data_2023-04-07/"):
     tses = tses[~tses[tses_cols].isnull().all(axis=1)]
     data = participants, demographics, tses, workshop_participation, workshop_info
 
+    # group yexp into bins
+    # one bin at 0, one bin for 1-2 yexp, then bins centered around multiples of 5
+    # bins are defined that way because teachers have a tendency to round up their
+    # numbers, which gives bias in the data
+    bins = [-1, 1, 3, 7, 12, 17, 22, 27, 32, 37, 42]
+    labels = [0, 2, 5, 10, 15, 20, 25, 30, 35, 40]
+    demographics['yexp_binned'] = pd.cut(demographics['yexp_teach'], bins=bins, labels=labels)
+    demographics.rename(columns={'yexp_binned': 'yexp_teach', 'yexp_teach': 'yexp_exact'}, inplace=True)
+    demographics['yexp_teach'] = demographics['yexp_teach'].astype(float)
+
     return data
 
 
