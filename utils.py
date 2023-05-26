@@ -43,19 +43,8 @@ def get_teaching_ses_values_short_names():
     return values, short_names
 
 
-def get_processed_tses():
-    """
-    Returns a dataframe of teachers demographics, with the following added columns:
-        "baseline_overall_tses":
-            the mean of self-efficacy for each teacher, at baseline (surveys that were filled
-            before attending any workshop)
-        "final_overall_tses":
-            the mean of self-efficacy for each teacher, for the latest surveys that were filled
-            (only teachers who filled more than one survey)
-        #TODO: add k_wkshp_tse ({0,1,2}_wkshp_tse etc..)     [hard]
-    """
+def get_baseline_tse_df():
     participants, demographics, tses, workshop_participation, workshop_info = load_data()
-
     teachers = get_teachers()
 
     # baseline_tse
@@ -82,6 +71,26 @@ def get_processed_tses():
     for subscale in ['mgmt', 'engage', 'strat']:
         cols = [col for col in baseline_tse.columns if subscale in col]
         baseline_tse[f"baseline_{subscale}"] = baseline_tse[cols].mean(axis=1)
+
+    return baseline_tse
+
+
+def get_processed_tses():
+    """
+    Returns a dataframe of teachers demographics, with the following added columns:
+        "baseline_overall_tses":
+            the mean of self-efficacy for each teacher, at baseline (surveys that were filled
+            before attending any workshop)
+        "final_overall_tses":
+            the mean of self-efficacy for each teacher, for the latest surveys that were filled
+            (only teachers who filled more than one survey)
+        #TODO: add k_wkshp_tse ({0,1,2}_wkshp_tse etc..)     [hard]
+    """
+    participants, demographics, tses, workshop_participation, workshop_info = load_data()
+
+    teachers = get_teachers()
+
+    baseline_tse = get_baseline_tse_df()
 
     # final_tse
     final_tse = pd.merge(teachers[[col for col in teachers.columns if col != 'Timestamp']],
@@ -176,6 +185,59 @@ def get_processed_is_researcher():
     return teachers
 
 
+def get_processed_tses_for_span(n):
+    """
+    Returns a dataframe containing baseline TSE (before any workshop)
+    and TSE after n months (+/-1month).
+    """
+    participants, demographics, tses, workshop_participation, workshop_info = load_data()
+    tses_cols = [col for col in tses.columns if 'tses' in col]
+
+    teachers = get_teachers().drop_duplicates(subset='user_id', keep='first')
+    teachers = teachers.drop(columns='Timestamp')
+    df = pd.merge(teachers, tses, on='user_id', how='inner')
+
+    baseline_tse = get_baseline_tse_df()
+
+    df['Timestamp_baseline'] = pd.merge(df, df.groupby('user_id')['Timestamp'].min(), on='user_id')['Timestamp_y']
+    df = pd.merge(df, baseline_tse[[
+        'user_id',
+        'baseline_overall_tses',
+        'baseline_mgmt',
+        'baseline_engage',
+        'baseline_strat',
+    ]], on='user_id', how='inner')
+
+    df['span'] = (df['Timestamp'] - df['Timestamp_baseline']).dt.days
+    df = df[df['span'] > 0]  # only keep teachers who filled >=2 surveys
+
+    # Remove extremely underrepresented demographic groups
+    df = df[df['teaching_level']!='autre']            # n=1
+    df = df[df['teaching_privpubl']!='Autre']         # n=1
+    df = df[df['teaching_privpubl']!='Public&Privé']  # n=1
+
+    # Select span of n months (+/-1month)
+    avg_days_by_month = 30.4167
+    df = df[(df['span']>(n-1)*avg_days_by_month) & (df['span']<(n+1)*avg_days_by_month)]
+
+    df["final_overall_tses"] = df[tses_cols].mean(axis=1)
+    for subscale in ['mgmt', 'engage', 'strat']:
+        cols = [col for col in tses.columns if subscale in col]
+        df[f"final_{subscale}"] = df[cols].mean(axis=1)
+
+    # keep only workshops participations that took place between a user's first and last tses survey
+    df_wk = pd.merge(df, workshop_participation, on='user_id', how='left')
+    df_wk_info = pd.merge(df_wk, workshop_info, on='wk_id', how='inner')
+    valid_wk = df_wk_info[(df_wk_info['Timestamp_baseline'] <= df_wk_info['workshop_date']) & (df_wk_info['workshop_date'] <= df_wk_info['Timestamp'])]
+    valid_wk_participation = valid_wk[workshop_participation.columns]
+
+    wk_count = pd.merge(df, valid_wk_participation, on='user_id', how='left').groupby('user_id')['wk_id'].count()
+    df = pd.merge(df, wk_count, on='user_id', how='left')
+    df = df.rename(columns={"wk_id": "nwks"})
+
+    return df
+
+
 if __name__=='__main__':
-    df = get_processed_tses()
+    df = get_processed_tses_for_span(5)
 

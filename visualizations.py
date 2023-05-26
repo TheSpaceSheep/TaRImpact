@@ -498,7 +498,8 @@ def nb_teachers_vs_tses_spans(save=False, show=False):
     have data fitting several spans for one teacher
     """
     teachers = get_teachers().drop_duplicates(subset='user_id', keep='first')
-    df = pd.merge(teachers[[c for c in teachers.columns if c != 'Timestamp']], tses, on='user_id', how='inner')
+    teachers = teachers.drop(columns='Timestamp')
+    df = pd.merge(teachers, tses, on='user_id', how='inner')
     df['Timestamp_baseline'] = pd.merge(df, df.groupby('user_id')['Timestamp'].min(), on='user_id')['Timestamp_y']
     df['span'] = (df['Timestamp'] - df['Timestamp_baseline']).dt.days
     df = df[df['span'] > 0]  # only keep teachers who filled >=2 surveys
@@ -601,6 +602,21 @@ def changing_researchers(save=False, show=False):
     print(df[['user_id', 'nwks']])
 
 
+# + hidden=true
+def n_span_teachers_TSE(n, save=False, show=False):
+    """
+    Shows baseline tses and tses after a period of n+/-1 months
+    """
+    df = get_processed_tses_for_span(n)
+
+    sns.scatterplot(x='Timestamp_baseline', y='baseline_overall_tses', data=df)
+    sns.scatterplot(x='Timestamp', y='final_overall_tses', data=df)
+    plt.legend(title=f'n={len(df)}')
+
+    if save: plt.savefig(save_folder + "n_span_teachers_TSE.png")
+    if show: plt.show()
+
+
 # -
 
 # # Plots
@@ -668,3 +684,4 @@ if __name__=="__main__":
 
 if __name__=="__main__":
     changing_researchers(save, show)
+    n_span_teachers_TSE(5, save, show)

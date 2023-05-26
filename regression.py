@@ -29,11 +29,13 @@ import seaborn as sns
 
 df = get_processed_tses()
 
+# + [markdown] heading_collapsed=true
 # # Reproducing Pagnotta et al.
 
+# + [markdown] hidden=true
 # ## Basic linear regression
 
-# + [markdown] heading_collapsed=true
+# + [markdown] heading_collapsed=true hidden=true
 # ### Model comparison
 
 # + [markdown] hidden=true
@@ -74,7 +76,7 @@ for model in models[1:]:
 # + [markdown] hidden=true
 # The best model seems to be M5
 
-# + [markdown] heading_collapsed=true
+# + [markdown] heading_collapsed=true hidden=true
 # ### Fitting M5 with the 3 TSES subscales
 
 # + hidden=true
@@ -105,18 +107,20 @@ for model in models:
 # effect of nwks on final TSE only for male teachers
 # "Male teachers might feel more able to engage their students
 # after participating in the Teachers as Researchers program"
-# -
 
+# + [markdown] hidden=true
 # ## Mixed Linear Models
 
+# + [markdown] hidden=true
 # When doing basic linear regression, we might overlook random effects of each individuals
 # A teacher's self-efficacy might not react the same way to exposure to the program, and
 # we should account for that using random intercepts and slopes
 
+# + [markdown] hidden=true
 # We redo the previous analysis (including model comparison) with mixed linear models
 # and report the results.
 
-# + [markdown] heading_collapsed=true
+# + [markdown] heading_collapsed=true hidden=true
 # ### Model Comparison
 
 # + hidden=true
@@ -151,7 +155,7 @@ for model in models:
 # The lowest values for AIC are for M1 (only covariates) and M2 (no interaction effects).
 # For models with interaction effects, M5 is once again the preferred model.
 
-# + [markdown] heading_collapsed=true
+# + [markdown] heading_collapsed=true hidden=true
 # ### Fitting M5 with the 3 TSES subscales
 
 # + hidden=true
@@ -176,17 +180,19 @@ for model in models:
 # After adjusting for random effects, we find that there is a slight effect
 # on instructional strategies. We also again find an interaction effect for student
 # engagement : nwks has an effect on male participants.
-# -
 
 
+# + [markdown] heading_collapsed=true
 # # Adding other covariates in the models
 
+# + [markdown] hidden=true
 # We add the new measured covariates to our models :
 # teaching_ses (socio-economic status of the participant's school),
 # is_researcher (is the participant also a researcher),
 # teaching_privpubl (are they teaching at a public or private school)
 # is_trainer_support (are they also training or supporting other teachers)
 
+# + [markdown] hidden=true
 # Notes :
 # - We find an effect of "is_researcher" on increase in self-efficacy but it
 # should be interpreted with caution, as there are not many teachers who are also researchers
@@ -195,13 +201,16 @@ for model in models:
 # - is_trainer_support predicts baseline TSE, but does it have an effect
 # on final TSE, when baseline TSE is controlled for ?
 
+# + [markdown] hidden=true
 # ## Effect of adding the new covariates to the model
 
+# + hidden=true
 models = [
     'final_overall_tses ~ baseline_overall_tses + yexp_teach + Genre',
     'final_overall_tses ~ baseline_overall_tses + yexp_teach + Genre + teaching_ses + is_researcher + teaching_privpubl + is_trainer_support',
 ]
 
+# + hidden=true
 # fitting the models
 results = {}
 for model in models:
@@ -210,21 +219,27 @@ for model in models:
     res = mod.fit()
     results[model] = res
 
+# + [markdown] hidden=true
 # model comparison : higher lr_stat means that adding new variables
 # yields an improvement compared to M1
 
+# + hidden=true
 for model in models[1:]:
     lr_stat, p_value, _ = results[model].compare_lr_test(results[models[0]])
     print(model)
     print('LR: ', lr_stat, 'pval: ', p_value, '\n')
 
 
+# + [markdown] hidden=true
 # Adding the covariates yields a significant improvement
 
+# + [markdown] hidden=true
 # We now repeat previous analysis with all covariables
 
+# + [markdown] hidden=true
 # ## Basic linear regression
 
+# + hidden=true
 covariables = 'baseline_overall_tses + yexp_teach + Genre + teaching_ses + is_researcher + teaching_privpubl + is_trainer_support'
 models = [
     f'final_overall_tses ~ {covariables}',                                     # M1
@@ -234,6 +249,7 @@ models = [
     f'final_overall_tses ~ {covariables} + nwks + nwks:Genre',                 # M5
 ]
 
+# + hidden=true
 results = {}
 for model in models:
     y, X = dmatrices(model, data=df, return_type='dataframe')
@@ -241,17 +257,22 @@ for model in models:
     res = mod.fit()
     results[model] = res
 
+# + [markdown] hidden=true
 # ### Model comparison
 
+# + hidden=true
 for model in models[1:]:
     lr_stat, p_value, _ = results[model].compare_lr_test(results[models[0]])
     print(model)
     print('LR: ', lr_stat, 'pval: ', p_value, '\n')
 
+# + [markdown] hidden=true
 # The best model seems to be M5 again
 
+# + [markdown] hidden=true
 # Fitting M5 with the 3 TSES subscales
 
+# + hidden=true
 covariables = 'baseline_overall_tses + yexp_teach + Genre + teaching_ses + is_researcher + teaching_privpubl'
 models = [
     f'final_overall_tses ~ {covariables} + nwks + nwks:Genre',
@@ -279,10 +300,13 @@ for model in models:
     # This means (female=0, male=1) : nkws has an effect on men in this model
 
 
+# + [markdown] hidden=true
 # ## Mixed Linear Models
 
+# + [markdown] hidden=true
 # ### Model comparison
 
+# + hidden=true
 covariables = 'baseline_overall_tses + yexp_teach + Genre + teaching_ses + is_researcher + teaching_privpubl'
 models = [
     f'final_overall_tses ~ {covariables}',                                     # M1
@@ -292,22 +316,27 @@ models = [
     f'final_overall_tses ~ {covariables} + nwks + nwks:Genre',                 # M5
 ]
 
+# + hidden=true
 results = {}
 for model in models:
     mod = smf.mixedlm(model, df, groups=df["user_id"], re_formula="~nwks")
     res = mod.fit(method=['lbfgs'], reml=False)
     results[model] = res
 
+# + hidden=true
 # AIC comparison : the greater difference with the base model indicates the better model
 for model in models:
     aic = results[model].aic
     print(model)
     print("aic:", round(aic, 2))
 
+# + [markdown] hidden=true
 # M5 has the lower AIC and hence seems to be the better model
 
+# + [markdown] hidden=true
 # ### Fitting M5 with the 3 tses subscales
 
+# + hidden=true
 covariables = 'baseline_overall_tses + yexp_teach + Genre + teaching_ses + is_researcher + teaching_privpubl'
 models = [
     f'final_overall_tses ~ {covariables} + nwks + nwks:Genre',
@@ -316,6 +345,7 @@ models = [
     f'final_strat ~ {covariables} + nwks + nwks:Genre',
 ]
 
+# + hidden=true
 for model in models:
     mod = smf.mixedlm(model, df, groups=df["user_id"], re_formula="~nwks")
     res = mod.fit(method=['lbfgs'])
@@ -325,9 +355,11 @@ for model in models:
     #print(f"nwks : {round(res.params.loc['nwks'], 4)} [{round(c_int[0], 4)}, {round(c_int[1], 4)}], pval: {round(pval, 3)}\n")
     print(res.summary())
 
+# + [markdown] hidden=true
 # We find again a slight effect on the instructional strategies subscale
 # and an interaction for student engagement (nwks has an effect on male participants)
 
+# + hidden=true
 # Investigating a potential interaction between nwks and is_researcher
 covariables = 'baseline_overall_tses + yexp_teach + Genre + teaching_ses + is_researcher + teaching_privpubl'
 models = [
@@ -337,6 +369,7 @@ models = [
     f'final_strat ~ {covariables} + nwks + nwks:is_researcher',
 ]
 
+# + hidden=true
 for model in models:
     mod = smf.mixedlm(model, df, groups=df["user_id"], re_formula="~nwks")
     res = mod.fit(method=['lbfgs'])
@@ -346,5 +379,41 @@ for model in models:
     #print(f"nwks : {round(res.params.loc['nwks'], 4)} [{round(c_int[0], 4)}, {round(c_int[1], 4)}], pval: {round(pval, 3)}\n")
     print(res.summary())
 
+# + [markdown] hidden=true
 # Result : no interaction effect between nwks and is_researcher
+# -
+
+
+# # Investigating fixed durations between TSES surveys
+
+# We restrain the dataset to a fixed duration (e.g. 6 months, +/-1 month) between 2 TSES surveys and look if the
+# program had an effect TSE over that period. it has been shown that accumulating too many hours of PD can have a
+# negative effect on teachers. By choosing a fixed duration, we hope to avoid such potential negative effects.
+
+for i in range(3, 8):
+    print(f"Span : {i} months")
+    df = get_processed_tses_for_span(i)
+    df = df.applymap(lambda x: x[:18] if isinstance(x, str) else x)
+
+    covariables = 'baseline_overall_tses + yexp_teach + Genre + teaching_ses + is_researcher + teaching_privpubl'
+    models = [
+        f'final_overall_tses ~ {covariables}',                                     # M1
+        f'final_overall_tses ~ {covariables} + nwks',                              # M2
+        f'final_overall_tses ~ {covariables} + nwks + nwks:baseline_overall_tses', # M3
+        f'final_overall_tses ~ {covariables} + nwks + nwks:yexp_teach',            # M4
+        f'final_overall_tses ~ {covariables} + nwks + nwks:Genre',                 # M5
+    ]
+
+    results = {}
+    for model in models:
+        mod = smf.mixedlm(model, df, groups=df["user_id"], re_formula="~nwks")
+        res = mod.fit(method=['lbfgs'], reml=False)
+        results[model] = res
+        print(res.summary())
+
+
+# We find again no effect, except for spans of 4 and 5 months. For these spans, we find that nwks has a significant
+# positive effect on final TSE. There seems to be an interaction with Genre and, to a lesser extent, with baseline_tse.
+# However, except for these 2 occurences, there are no effects to report for all other cases. Since we are dealing with
+# small sample sizes in this last analysis, we should proceed with caution.
 
